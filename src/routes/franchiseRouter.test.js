@@ -91,7 +91,7 @@ test("Create franchise", async () => {
 
   const newFranchise = {
     name: franchiseName,
-    admins: [{ email: "t@jwt.com" }],
+    admins: [{ email: adminUser.email }],
   };
 
   const res = await request(app)
@@ -109,6 +109,8 @@ test("Delete franchise", async () => {
   let preFranchises = await DB.getFranchises();
   let franchisesBeforeDelete = preFranchises.length;
 
+  console.log("preFranchises: " + preFranchises.length);
+  console.log("franchiseId: " + franchiseId);
   const res = await request(app)
     .delete("/api/franchise/" + franchiseId)
     .set("Authorization", "Bearer " + adminToken);
