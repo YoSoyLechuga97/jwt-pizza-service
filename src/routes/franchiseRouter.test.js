@@ -85,6 +85,8 @@ test("Get user franchises", async () => {
 });
 
 test("Create franchise", async () => {
+  let preFranchises = await DB.getFranchises();
+  console.log("preFranchises: " + preFranchises.length);
   let franchiseName = randomName() + " Franchise";
 
   const newFranchise = {
@@ -99,16 +101,14 @@ test("Create franchise", async () => {
 
   let currFranchises = await DB.getFranchises();
 
-  expect(currFranchises.length).toBe(numFranchises + 1);
   expect(res.status).toBe(200);
+  expect(currFranchises.length).toBe(numFranchises + 1);
 });
 
 test("Delete franchise", async () => {
   let preFranchises = await DB.getFranchises();
   let franchisesBeforeDelete = preFranchises.length;
 
-  console.log("preFranchises: " + preFranchises.length);
-  console.log("franchiseId: " + franchiseId);
   const res = await request(app)
     .delete("/api/franchise/" + franchiseId)
     .set("Authorization", "Bearer " + adminToken);
