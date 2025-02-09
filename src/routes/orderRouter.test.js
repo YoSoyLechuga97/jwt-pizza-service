@@ -131,6 +131,8 @@ test("getOrders", async () => {
 
 test("createOrder", async () => {
   let { franchise, store } = await franchiseAndStore();
+  console.log("franchiseID: ", franchise.id);
+    console.log("storeID: ", store.id);
   const res = await request(app)
     .post("/api/order")
     .set("Authorization", "Bearer " + testUserAuthToken)
@@ -146,7 +148,7 @@ test("createOrder", async () => {
       ],
     });
 
-  console.log(res.body);
+  console.log("The body is: ", res.body);
 
   expect(res.body.jwt).toBeDefined();
   expect(res.status).toBe(200);
