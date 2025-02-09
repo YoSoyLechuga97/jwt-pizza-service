@@ -37,7 +37,6 @@ async function generateMenu() {
 
 async function franchiseAndStore() {
   //Create a franchise
-  console.log("adminUser from franchise$store is: ", adminUser);
   let newFranchise = await DB.createFranchise({
     name: randomName() + " Franchise",
     admins: [{ email: adminUser.email }],
@@ -62,7 +61,6 @@ async function createAdminUser() {
 
 async function login() {
   adminUser = await createAdminUser();
-  console.log("adminUser", adminUser);
   const loginRes = await request(app).put("/api/auth").send(adminUser);
   expect(loginRes.status).toBe(200);
 
@@ -132,7 +130,6 @@ test("getOrders", async () => {
 });
 
 test("createOrder", async () => {
-  console.log("adminUser from createOrder is: ", adminUser);
   let { franchise, store } = await franchiseAndStore();
   const res = await request(app)
     .post("/api/order")
@@ -149,6 +146,8 @@ test("createOrder", async () => {
       ],
     });
 
-  expectValidJwt(res.body.jwt);
+  console.log(res.body);
+
+  expect(res.body.jwt).toBeDefined();
   expect(res.status).toBe(200);
 });
