@@ -113,8 +113,6 @@ test("getOrders", async () => {
 });
 
 test("createOrder", async () => {
-  //   console.log(thePizza);
-  console.log("Length: " + menuLength);
   const res = await request(app)
     .post("/api/order")
     .set("Authorization", "Bearer " + testUserAuthToken)
