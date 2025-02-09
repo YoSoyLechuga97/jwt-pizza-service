@@ -5,8 +5,6 @@ const { Role, DB } = require("../database/database.js");
 const testUser = { name: "pizza diner", email: "reg@test.com", password: "a" };
 let testUserAuthToken;
 let adminToken;
-let adminId;
-let testUserID;
 let menuLength;
 
 beforeAll(async () => {
@@ -22,12 +20,11 @@ async function createAdminUser() {
   user.email = user.name + "@admin.com";
 
   user = await DB.addUser(user);
-  adminId = user.id;
   return { ...user, password: "toomanysecrets" };
 }
 
 async function login() {
-  adminUser = await createAdminUser();
+  let adminUser = await createAdminUser();
   const loginRes = await request(app).put("/api/auth").send(adminUser);
   expect(loginRes.status).toBe(200);
 
@@ -36,7 +33,6 @@ async function login() {
   expect(loginRes.body.user).toMatchObject(expectedUser);
 
   adminToken = loginRes.body.token;
-  adminId = loginRes.body.user.id;
 }
 
 function generatePizza() {
@@ -71,7 +67,7 @@ test("Get Menu", async () => {
 });
 
 test("Add Menu Item - unauthorized", async () => {
-  newPizza = generatePizza();
+  let newPizza = generatePizza();
   const res = await request(app)
     .put("/api/order/menu")
     .set("Authorization", "Bearer " + testUserAuthToken)
@@ -83,7 +79,7 @@ test("Add Menu Item - unauthorized", async () => {
 
 test("Add Menu Item - authorized", async () => {
   await login();
-  newPizza = generatePizza();
+  let newPizza = generatePizza();
   const res = await request(app)
     .put("/api/order/menu")
     .set("Authorization", "Bearer " + adminToken)

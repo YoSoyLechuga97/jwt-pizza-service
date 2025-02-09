@@ -3,9 +3,9 @@ const app = require("../service");
 
 const { Role, DB } = require("../database/database.js");
 let adminUser = createAdminUser();
-let adminToken;
-let franchiseId;
-let storeID;
+let adminToken = '';
+let franchiseId = 0;
+let storeID = 0;
 let numFranchises = 0;
 function randomName() {
   return Math.random().toString(36).substring(2, 12);
@@ -17,7 +17,6 @@ async function createAdminUser() {
   user.email = user.name + "@admin.com";
 
   user = await DB.addUser(user);
-  adminId = user.id;
   return { ...user, password: "toomanysecrets" };
 }
 
@@ -31,7 +30,6 @@ async function login() {
   expect(loginRes.body.user).toMatchObject(expectedUser);
 
   adminToken = loginRes.body.token;
-  adminId = loginRes.body.user.id;
 }
 
 beforeAll(async () => {
@@ -64,7 +62,7 @@ test("Get user franchises", async () => {
 });
 
 test("Create franchise", async () => {
-  franchiseName = randomName() + " Franchise";
+  let franchiseName = randomName() + " Franchise";
 
   const newFranchise = {
     name: franchiseName,
@@ -76,7 +74,7 @@ test("Create franchise", async () => {
     .set("Authorization", "Bearer " + adminToken)
     .send(newFranchise);
 
-  currFranchises = await getFranchises();
+  let currFranchises = await getFranchises();
   expect(currFranchises).toBeGreaterThan(numFranchises);
 
   franchiseId = res.body.id;
@@ -88,7 +86,7 @@ test("Delete franchise", async () => {
     .delete("/api/franchise/" + franchiseId)
     .set("Authorization", "Bearer " + adminToken);
 
-  currFranchises = await getFranchises();
+  let currFranchises = await getFranchises();
   expect(currFranchises).toBe(numFranchises);
 
   expect(res.status).toBe(200);
