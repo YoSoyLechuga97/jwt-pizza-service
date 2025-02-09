@@ -5,14 +5,44 @@ const { Role, DB } = require("../database/database.js");
 const testUser = { name: "pizza diner", email: "reg@test.com", password: "a" };
 let testUserAuthToken;
 let adminToken;
-let menuLength;
+let menuLength = 0;
+let thePizza;
+let thePizzaID;
 
 beforeAll(async () => {
   testUser.email = Math.random().toString(36).substring(2, 12) + "@test.com";
   const registerRes = await request(app).post("/api/auth").send(testUser);
   testUserAuthToken = registerRes.body.token;
   expectValidJwt(testUserAuthToken);
+
+  //Create an admin user
+  await login();
+
+  //Create a menu
+  thePizza = await generateMenu();
+
+  //Find Menu Length
+  res = await request(app)
+    .get("/api/order/menu")
+    .set("Authorization", "Bearer " + adminToken);
+  console.log("Here is the length: " + res.body.length);
+  menuLength = res.body.length;
+  console.log("Here is the menu length: " + menuLength);
 });
+
+async function generateMenu() {
+  for (let i = 0; i < 5; i++) {
+    let newPizza = generatePizza();
+    const res = await request(app)
+      .put("/api/order/menu")
+      .set("Authorization", "Bearer " + adminToken)
+      .send(newPizza);
+    console.log("Here is the body: " + res.body);
+    thePizza = res.body;
+    thePizzaID = res.body.id;
+  }
+  return thePizza;
+}
 
 async function createAdminUser() {
   let user = { password: "toomanysecrets", roles: [{ role: Role.Admin }] };
@@ -60,8 +90,6 @@ test("Get Menu", async () => {
     .get("/api/order/menu")
     .set("Authorization", "Bearer " + testUserAuthToken);
 
-  menuLength = res.length;
-
   expect(res.status).toBe(200);
 });
 
@@ -84,8 +112,8 @@ test("Add Menu Item - authorized", async () => {
     .set("Authorization", "Bearer " + adminToken)
     .send(newPizza);
 
+  thePizza = newPizza;
   expect(res.status).toBe(200);
-  expect(res.length == menuLength + 1);
 });
 
 test("getOrders", async () => {
@@ -97,13 +125,21 @@ test("getOrders", async () => {
 });
 
 test("createOrder", async () => {
+  console.log(thePizza);
+  console.log("Length: " + menuLength.toString());
   const res = await request(app)
     .post("/api/order")
     .set("Authorization", "Bearer " + testUserAuthToken)
     .send({
       franchiseId: 1,
       storeId: 1,
-      items: [{ menuId: 1, description: "Veggie", price: 0.05 }],
+      items: [
+        {
+          menuId: menuLength - 1,
+          description: thePizza.description,
+          price: thePizza.price,
+        },
+      ],
     });
 
   expect(res.status).toBe(200);
