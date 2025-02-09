@@ -21,7 +21,7 @@ beforeAll(async () => {
   thePizza = await generateMenu();
 
   //Find Menu Length
-  menu = await DB.getMenu();
+  let menu = await DB.getMenu();
   menuLength = menu.length;
 });
 
