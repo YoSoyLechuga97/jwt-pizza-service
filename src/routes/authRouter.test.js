@@ -12,8 +12,6 @@ beforeAll(async () => {
   expectValidJwt(testUserAuthToken);
 });
 
-const { Role, DB } = require("../database/database.js");
-
 function randomName() {
   return Math.random().toString(36).substring(2, 12);
 }

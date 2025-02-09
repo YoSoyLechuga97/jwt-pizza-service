@@ -51,7 +51,6 @@ test("Get franchises", async () => {
     .set("Authorization", "Bearer " + adminToken);
 
   numFranchises = res.body.length;
-  console.log(numFranchises);
 
   expect(res.status).toBe(200);
 });
