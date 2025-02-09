@@ -63,7 +63,6 @@ test("Get Menu", async () => {
   menuLength = res.length;
 
   expect(res.status).toBe(200);
-  expect(res.length == 5); //5 menu items
 });
 
 test("Add Menu Item - unauthorized", async () => {
