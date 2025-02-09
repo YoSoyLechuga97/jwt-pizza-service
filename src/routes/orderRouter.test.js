@@ -21,21 +21,15 @@ beforeAll(async () => {
   thePizza = await generateMenu();
 
   //Find Menu Length
-  const res = await request(app)
-    .get("/api/order/menu")
-    .set("Authorization", "Bearer " + adminToken);
-  menuLength = res.body.length;
+  menu = await DB.getMenu();
+  menuLength = menu.length;
 });
 
 async function generateMenu() {
-  for (let i = 0; i < 5; i++) {
+  for (let I = 0; I < 5; I++) {
     let newPizza = generatePizza();
-    const res = await request(app)
-      .put("/api/order/menu")
-      .set("Authorization", "Bearer " + adminToken)
-      .send(newPizza);
-    console.log("Here is the body: " + res.body);
-    thePizza = res.body;
+    DB.addMenuItem(newPizza);
+    thePizza = newPizza;
   }
   return thePizza;
 }
@@ -44,8 +38,7 @@ async function createAdminUser() {
   let user = { password: "toomanysecrets", roles: [{ role: Role.Admin }] };
   user.name = randomName();
   user.email = user.name + "@admin.com";
-
-  user = await DB.addUser(user);
+  DB.user = await DB.addUser(user);
   return { ...user, password: "toomanysecrets" };
 }
 
@@ -120,8 +113,8 @@ test("getOrders", async () => {
 });
 
 test("createOrder", async () => {
-  console.log(thePizza);
-  console.log("Length: " + menuLength.toString());
+  //   console.log(thePizza);
+  console.log("Length: " + menuLength);
   const res = await request(app)
     .post("/api/order")
     .set("Authorization", "Bearer " + testUserAuthToken)
