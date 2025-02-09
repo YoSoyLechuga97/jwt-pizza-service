@@ -85,8 +85,6 @@ test("Get user franchises", async () => {
 });
 
 test("Create franchise", async () => {
-  let preFranchises = await DB.getFranchises();
-  console.log("preFranchises: " + preFranchises.length);
   let franchiseName = randomName() + " Franchise";
 
   const newFranchise = {
@@ -105,23 +103,9 @@ test("Create franchise", async () => {
   expect(currFranchises.length).toBe(numFranchises + 1);
 });
 
-test("Delete franchise", async () => {
-  let preFranchises = await DB.getFranchises();
-  let franchisesBeforeDelete = preFranchises.length;
-
-  console.log("preFranchises: " + preFranchises.length);
-  console.log("franchiseId: " + franchiseId);
-  const res = await request(app)
-    .delete("/api/franchise/" + franchiseId)
-    .set("Authorization", "Bearer " + adminToken);
-
-  let currFranchises = await DB.getFranchises();
-  expect(currFranchises.length).toBe(franchisesBeforeDelete - 1);
-
-  expect(res.status).toBe(200);
-});
-
 test("Create store", async () => {
+  console.log("in Create Store franchiseId: " + franchiseId);
+  console.log("adminToken: " + adminToken);
   const storeName = randomName() + " Store";
   const newStore = {
     franchiseId: franchiseId,
@@ -129,7 +113,7 @@ test("Create store", async () => {
   };
 
   const res = await request(app)
-    .post("/api/franchise/4/store")
+    .post("/api/franchise/" + franchiseId + "/store")
     .set("Authorization", "Bearer " + adminToken)
     .send(newStore);
 
@@ -143,6 +127,22 @@ test("Delete store", async () => {
   const res = await request(app)
     .delete("/api/franchise/4/store/" + storeID)
     .set("Authorization", "Bearer " + adminToken);
+
+  expect(res.status).toBe(200);
+});
+
+test("Delete franchise", async () => {
+  let preFranchises = await DB.getFranchises();
+  let franchisesBeforeDelete = preFranchises.length;
+
+  console.log("preFranchises: " + franchisesBeforeDelete);
+  console.log("franchiseId: " + franchiseId);
+  const res = await request(app)
+    .delete("/api/franchise/" + franchiseId)
+    .set("Authorization", "Bearer " + adminToken);
+
+  let currFranchises = await DB.getFranchises();
+  expect(currFranchises.length).toBeLessThan(preFranchises.length);
 
   expect(res.status).toBe(200);
 });
