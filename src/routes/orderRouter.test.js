@@ -5,6 +5,7 @@ const { Role, DB } = require("../database/database.js");
 const testUser = { name: "pizza diner", email: "reg@test.com", password: "a" };
 let testUserAuthToken;
 let adminToken;
+let adminUser;
 let menuLength = 0;
 let thePizza;
 
@@ -34,6 +35,23 @@ async function generateMenu() {
   return thePizza;
 }
 
+async function franchiseAndStore() {
+  //Create a franchise
+  console.log("adminUser from franchise$store is: ", adminUser);
+  let newFranchise = await DB.createFranchise({
+    name: randomName() + " Franchise",
+    admins: [{ email: adminUser.email }],
+  });
+
+  //Create a store
+  let newStore = await DB.createStore(newFranchise.id, {
+    name: randomName() + " Store",
+    address: randomName() + " Address",
+  });
+
+  return { franchise: newFranchise, store: newStore };
+}
+
 async function createAdminUser() {
   let user = { password: "toomanysecrets", roles: [{ role: Role.Admin }] };
   user.name = randomName();
@@ -43,7 +61,8 @@ async function createAdminUser() {
 }
 
 async function login() {
-  let adminUser = await createAdminUser();
+  adminUser = await createAdminUser();
+  console.log("adminUser", adminUser);
   const loginRes = await request(app).put("/api/auth").send(adminUser);
   expect(loginRes.status).toBe(200);
 
@@ -113,12 +132,14 @@ test("getOrders", async () => {
 });
 
 test("createOrder", async () => {
+  console.log("adminUser from createOrder is: ", adminUser);
+  let { franchise, store } = await franchiseAndStore();
   const res = await request(app)
     .post("/api/order")
     .set("Authorization", "Bearer " + testUserAuthToken)
     .send({
-      franchiseId: 1,
-      storeId: 1,
+      franchiseId: franchise.id,
+      storeId: store.id,
       items: [
         {
           menuId: menuLength - 1,
@@ -128,5 +149,6 @@ test("createOrder", async () => {
       ],
     });
 
+  expectValidJwt(res.body.jwt);
   expect(res.status).toBe(200);
 });
