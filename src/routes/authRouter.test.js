@@ -18,15 +18,6 @@ function randomName() {
   return Math.random().toString(36).substring(2, 12);
 }
 
-async function createAdminUser() {
-  let user = { password: "toomanysecrets", roles: [{ role: Role.Admin }] };
-  user.name = randomName();
-  user.email = user.name + "@admin.com";
-
-  user = await DB.addUser(user);
-  return { ...user, password: "toomanysecrets" };
-}
-
 test("login", login);
 
 async function login() {
@@ -50,12 +41,10 @@ function expectValidJwt(potentialJwt) {
 
 test("update user email", async () => {
   const newEmail = randomName() + "@test.com";
-  console.log("The user ID is: " + testUserID);
   const updatedUser = await request(app)
     .put("/api/auth/" + testUserID)
     .set("Authorization", "Bearer " + testUserAuthToken)
     .send({ email: newEmail, password: testUser.password });
-  console.log(updatedUser.body);
   expect(updatedUser.status).toBe(200);
   testUser.email = newEmail;
 });
