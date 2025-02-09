@@ -29,7 +29,7 @@ beforeAll(async () => {
 async function generateMenu() {
   for (let I = 0; I < 5; I++) {
     let newPizza = generatePizza();
-    DB.addMenuItem(newPizza);
+    await DB.addMenuItem(newPizza);
     thePizza = newPizza;
   }
   return thePizza;
