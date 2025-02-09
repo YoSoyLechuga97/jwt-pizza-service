@@ -7,7 +7,6 @@ let testUserAuthToken;
 let adminToken;
 let menuLength = 0;
 let thePizza;
-let thePizzaID;
 
 beforeAll(async () => {
   testUser.email = Math.random().toString(36).substring(2, 12) + "@test.com";
@@ -22,12 +21,10 @@ beforeAll(async () => {
   thePizza = await generateMenu();
 
   //Find Menu Length
-  res = await request(app)
+  const res = await request(app)
     .get("/api/order/menu")
     .set("Authorization", "Bearer " + adminToken);
-  console.log("Here is the length: " + res.body.length);
   menuLength = res.body.length;
-  console.log("Here is the menu length: " + menuLength);
 });
 
 async function generateMenu() {
@@ -39,7 +36,6 @@ async function generateMenu() {
       .send(newPizza);
     console.log("Here is the body: " + res.body);
     thePizza = res.body;
-    thePizzaID = res.body.id;
   }
   return thePizza;
 }
@@ -105,7 +101,6 @@ test("Add Menu Item - unauthorized", async () => {
 });
 
 test("Add Menu Item - authorized", async () => {
-  await login();
   let newPizza = generatePizza();
   const res = await request(app)
     .put("/api/order/menu")
