@@ -152,7 +152,7 @@ function systemMetrics(buf) {
 
 //TODO USERMETRICS (FIND OUT HOW MANY USERS ARE LOGGED IN)
 async function userMetrics(buf) {
-  const activeUsers = await DB.getActiveUsersCount();
+  const activeUsers = await DB.getActiveUsers();
   buf.add("users_logged_in", parseInt(activeUsers));
 }
 
