@@ -38,7 +38,7 @@ class MetricBuilder {
 
     this.metrics.push({
       name,
-      unit: '1',
+      unit: "1",
       sum: {
         dataPoints: [
           {
@@ -47,7 +47,7 @@ class MetricBuilder {
             attributes,
           },
         ],
-        aggregationTemporality: 'AGGREGATION_TEMPORALITY_CUMULATIVE',
+        aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
         isMonotonic: true,
       },
     });
@@ -71,7 +71,6 @@ class MetricBuilder {
     this.metrics = [];
   }
 }
-
 
 function requestTracker(req, res, next) {
   const method = req.method;
@@ -213,19 +212,19 @@ function sendMetricsPeriodically(period) {
 
 function sendMetricsToGrafana(payload) {
   // Append `source` to each data point
-  const sourceTag = { key: 'source', value: { stringValue: config.source } };
+  const sourceTag = { key: "source", value: { stringValue: config.source } };
 
-  payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach(metric => {
-    metric.sum.dataPoints.forEach(dp => {
+  payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
+    metric.sum.dataPoints.forEach((dp) => {
       dp.attributes.push(sourceTag);
     });
   });
 
-  fetch(`${config.url}`, {
-    method: 'POST',
+  fetch(`${config.metrics.url}`, {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   })
@@ -240,7 +239,6 @@ function sendMetricsToGrafana(payload) {
       console.error("Error pushing metrics:", err);
     });
 }
-
 
 // function sendMetricToGrafana(metricName, metricValue, attributes) {
 //   attributes = { ...attributes, source: config.source };
