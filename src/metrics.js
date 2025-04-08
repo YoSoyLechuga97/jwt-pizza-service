@@ -1,7 +1,7 @@
 const os = require("os");
 const config = require("./config");
 const DB = require("./database/database.js").DB;
-const orderRouter = require("./routes/orderRouter.js");
+const orderRouter = require("./routes/orderRouter.js").orderRouter;
 
 const requests = {};
 
