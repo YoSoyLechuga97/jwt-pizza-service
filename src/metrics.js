@@ -159,7 +159,6 @@ function httpMetrics(buf) {
     if (durations.length > 0) {
       const total = durations.reduce((sum, d) => sum + d, 0);
       const avg = total / durations.length;
-      const max = Math.max(...durations);
 
       // Avg latency
       buf.add("http_latency_ms_avg", avg, {
