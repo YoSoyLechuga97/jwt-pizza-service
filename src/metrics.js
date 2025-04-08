@@ -177,12 +177,35 @@ function getMemoryUsagePercentage() {
   return memoryUsage.toFixed(2);
 }
 
+// function httpMetrics(buf) {
+//   Object.values(requests).forEach((record) => {
+//     buf.add("http_requests_total", record.count, {
+//       method: record.method,
+//       endpoint: record.path,
+//     });
+//   });
+// }
+
 function httpMetrics(buf) {
   Object.values(requests).forEach((record) => {
-    buf.add("http_requests_total", record.count, {
-      method: record.method,
-      endpoint: record.path,
-    });
+    const { method, path, count } = record;
+
+    // Only track endpoint details for these:
+    const isAuth = path.startsWith("/auth");
+    const isOrder = path.includes("order") || path.includes("pizza");
+
+    if (isAuth || isOrder) {
+      buf.add("http_requests_total", count, {
+        method,
+        endpoint: isAuth ? "/auth" : "/order",
+      });
+    } else {
+      // Everything else gets grouped by method only
+      buf.add("http_requests_total", count, {
+        method,
+        endpoint: "general",
+      });
+    }
   });
 }
 
