@@ -178,13 +178,19 @@ function httpMetrics(buf) {
       endpoint,
     });
 
-    const totalDuration = record.durations.reduce((sum, d) => sum + d, 0);
-    const avgDuration = totalDuration / record.durations.length || 0;
+    if (durations.length > 0) {
+      const total = durations.reduce((sum, d) => sum + d, 0);
+      const avg = total / durations.length;
 
-    buf.addGauge("http_latency_ms_avg", avgDuration, {
-      method,
-      endpoint: isAuth ? "/auth" : isOrder ? "/order" : "general",
-    });
+      // Avg latency
+      buf.addGauge("http_latency_ms_avg", avg, {
+        method,
+        endpoint,
+      });
+    } else {
+      // No durations recorded, so we can skip this metric
+      console.warn(`No durations recorded for ${method} ${path}`);
+    }
   });
 }
 
@@ -253,8 +259,15 @@ function sendMetricsToGrafana(payload) {
     value: { stringValue: config.metrics.source },
   };
 
+  // payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
+  //   metric.sum.dataPoints.forEach((dp) => {
+  //     dp.attributes.push(sourceTag);
+  //   });
+  // });
+
   payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
-    metric.sum.dataPoints.forEach((dp) => {
+    const dataPoints = metric.sum?.dataPoints || metric.gauge?.dataPoints || [];
+    dataPoints.forEach((dp) => {
       dp.attributes.push(sourceTag);
     });
   });
