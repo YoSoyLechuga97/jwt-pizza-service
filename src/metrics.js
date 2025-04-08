@@ -42,14 +42,23 @@ class MetricBuilder {
       sum: {
         dataPoints: [
           {
-            asDouble: value,
-            timeUnixNano: Date.now() * 1e6,
-            attributes,
+            asInt: value,
+            timeUnixNano: Date.now() * 1000000,
+            attributes: [],
           },
         ],
         aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
         isMonotonic: true,
       },
+    });
+
+    Object.keys(attributes).forEach((key) => {
+      metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+        {
+          key: key,
+          value: { stringValue: attributes[key] },
+        }
+      );
     });
   }
 
@@ -58,12 +67,7 @@ class MetricBuilder {
       resourceMetrics: [
         {
           resource: {
-            attributes: [
-              {
-                key: "service.name",
-                value: { stringValue: config.source || "my-service" },
-              },
-            ],
+            attributes: this.attributes,
           },
           scopeMetrics: [
             {
@@ -160,45 +164,6 @@ function authMetrics(buf) {
     }
   });
 }
-
-// function sendRawMetricsToGrafana(metricString) {
-//   fetch(`${config.url}`, {
-//     method: "POST",
-//     body: metricString,
-//     headers: {
-//       Authorization: `Bearer ${config.apiKey}`,
-//       "Content-Type": "text/plain",
-//     },
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         console.error("Failed to push metrics to Grafana");
-//       } else {
-//         console.log("✅ Pushed metrics to Grafana");
-//       }
-//     })
-//     .catch((err) => {
-//       console.error("Error sending metrics:", err);
-//     });
-// }
-
-// function sendMetricsPeriodically(period) {
-//   setInterval(() => {
-//     try {
-//       const buf = new MetricBuilder();
-//       httpMetrics(buf);
-//       systemMetrics(buf);
-//       //userMetrics(buf);
-//       //purchaseMetrics(buf);
-//       authMetrics(buf);
-
-//       const metrics = buf.toString("\n");
-//       sendMetricToGrafana(metrics);
-//     } catch (error) {
-//       console.log("Error sending metrics", error);
-//     }
-//   }, period);
-// }
 
 function sendMetricsPeriodically(period) {
   setInterval(() => {
