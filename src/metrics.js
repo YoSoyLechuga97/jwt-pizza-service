@@ -3,27 +3,75 @@ const config = require("./config");
 
 const requests = {};
 
+// class MetricBuilder {
+//   constructor() {
+//     this.metrics = [];
+//   }
+
+//   add(name, value, tags = {}) {
+//     const tagString = Object.entries(tags)
+//       .map(([k, v]) => `${k}="${v}"`)
+//       .join(",");
+
+//     this.metrics.push(`${name}{${tagString}} ${value}`);
+//   }
+
+//   toString(separator = "\n") {
+//     return this.metrics.join(separator);
+//   }
+
+//   clear() {
+//     this.metrics = [];
+//   }
+// }
+
 class MetricBuilder {
   constructor() {
     this.metrics = [];
   }
 
   add(name, value, tags = {}) {
-    const tagString = Object.entries(tags)
-      .map(([k, v]) => `${k}="${v}"`)
-      .join(",");
+    const attributes = Object.entries(tags).map(([key, val]) => ({
+      key,
+      value: { stringValue: val },
+    }));
 
-    this.metrics.push(`${name}{${tagString}} ${value}`);
+    this.metrics.push({
+      name,
+      unit: '1',
+      sum: {
+        dataPoints: [
+          {
+            asInt: value,
+            timeUnixNano: Date.now() * 1e6,
+            attributes,
+          },
+        ],
+        aggregationTemporality: 'AGGREGATION_TEMPORALITY_CUMULATIVE',
+        isMonotonic: true,
+      },
+    });
   }
 
-  toString(separator = "\n") {
-    return this.metrics.join(separator);
+  toOTLP() {
+    return {
+      resourceMetrics: [
+        {
+          scopeMetrics: [
+            {
+              metrics: this.metrics,
+            },
+          ],
+        },
+      ],
+    };
   }
 
   clear() {
     this.metrics = [];
   }
 }
+
 
 function requestTracker(req, res, next) {
   const method = req.method;
@@ -127,89 +175,131 @@ function authMetrics(buf) {
 //     });
 // }
 
+// function sendMetricsPeriodically(period) {
+//   setInterval(() => {
+//     try {
+//       const buf = new MetricBuilder();
+//       httpMetrics(buf);
+//       systemMetrics(buf);
+//       //userMetrics(buf);
+//       //purchaseMetrics(buf);
+//       authMetrics(buf);
+
+//       const metrics = buf.toString("\n");
+//       sendMetricToGrafana(metrics);
+//     } catch (error) {
+//       console.log("Error sending metrics", error);
+//     }
+//   }, period);
+// }
+
 function sendMetricsPeriodically(period) {
   setInterval(() => {
     try {
       const buf = new MetricBuilder();
       httpMetrics(buf);
       systemMetrics(buf);
-      //userMetrics(buf);
-      //purchaseMetrics(buf);
       authMetrics(buf);
+      // userMetrics(buf);
+      // purchaseMetrics(buf);
 
-      const metrics = buf.toString("\n");
-      sendMetricToGrafana(metrics);
+      const metricPayload = buf.toOTLP();
+      sendMetricsToGrafana(metricPayload);
     } catch (error) {
-      console.log("Error sending metrics", error);
+      console.error("Error collecting metrics", error);
     }
   }, period);
 }
 
-// // This will periodically send metrics to Grafana
-// const timer = setInterval(() => {
-//   Object.keys(requests).forEach((endpoint) => {
-//     sendMetricToGrafana('requests', requests[endpoint], { endpoint });
-//   });
-// }, 10000);
+function sendMetricsToGrafana(payload) {
+  // Append `source` to each data point
+  const sourceTag = { key: 'source', value: { stringValue: config.source } };
 
-function sendMetricToGrafana(metricName, metricValue, attributes) {
-  attributes = { ...attributes, source: config.source };
-
-  const metric = {
-    resourceMetrics: [
-      {
-        scopeMetrics: [
-          {
-            metrics: [
-              {
-                name: metricName,
-                unit: "1",
-                sum: {
-                  dataPoints: [
-                    {
-                      asInt: metricValue,
-                      timeUnixNano: Date.now() * 1000000,
-                      attributes: [],
-                    },
-                  ],
-                  aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-                  isMonotonic: true,
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
-
-  Object.keys(attributes).forEach((key) => {
-    metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-      {
-        key: key,
-        value: { stringValue: attributes[key] },
-      }
-    );
+  payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach(metric => {
+    metric.sum.dataPoints.forEach(dp => {
+      dp.attributes.push(sourceTag);
+    });
   });
 
   fetch(`${config.url}`, {
-    method: "POST",
-    body: JSON.stringify(metric),
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify(payload),
   })
-    .then((response) => {
-      if (!response.ok) {
-        console.error("Failed to push metrics data to Grafana");
+    .then((res) => {
+      if (!res.ok) {
+        console.error("Failed to push metrics to Grafana:", res.statusText);
       } else {
-        console.log(`Pushed ${metricName}`);
+        console.log("Metrics pushed to Grafana!");
       }
     })
-    .catch((error) => {
-      console.error("Error pushing metrics:", error);
+    .catch((err) => {
+      console.error("Error pushing metrics:", err);
     });
 }
+
+
+// function sendMetricToGrafana(metricName, metricValue, attributes) {
+//   attributes = { ...attributes, source: config.source };
+
+//   const metric = {
+//     resourceMetrics: [
+//       {
+//         scopeMetrics: [
+//           {
+//             metrics: [
+//               {
+//                 name: metricName,
+//                 unit: "1",
+//                 sum: {
+//                   dataPoints: [
+//                     {
+//                       asInt: metricValue,
+//                       timeUnixNano: Date.now() * 1000000,
+//                       attributes: [],
+//                     },
+//                   ],
+//                   aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
+//                   isMonotonic: true,
+//                 },
+//               },
+//             ],
+//           },
+//         ],
+//       },
+//     ],
+//   };
+
+//   Object.keys(attributes).forEach((key) => {
+//     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+//       {
+//         key: key,
+//         value: { stringValue: attributes[key] },
+//       }
+//     );
+//   });
+
+//   fetch(`${config.url}`, {
+//     method: "POST",
+//     body: JSON.stringify(metric),
+//     headers: {
+//       Authorization: `Bearer ${config.apiKey}`,
+//       "Content-Type": "application/json",
+//     },
+//   })
+//     .then((response) => {
+//       if (!response.ok) {
+//         console.error("Failed to push metrics data to Grafana");
+//       } else {
+//         console.log(`Pushed ${metricName}`);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Error pushing metrics:", error);
+//     });
+// }
 
 module.exports = { requestTracker, sendMetricsPeriodically };
