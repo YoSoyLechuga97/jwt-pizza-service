@@ -112,7 +112,7 @@ function requestTracker(req, res, next) {
       method,
       path,
       count: 0,
-      durations: [], // For latency measurements
+      durations: [], // For latency
       statuses: {}, // For success/failure/response codes
     };
   }
