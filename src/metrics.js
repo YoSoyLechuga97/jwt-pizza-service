@@ -92,13 +92,6 @@ function systemMetrics(buf) {
 
 //TODO PURCHASEMETRICS (FIND OUT HOW MANY PURCHASES ARE MADE)
 
-function userMetrics(buf) {
-  // TODO: implement later
-}
-function purchaseMetrics(buf) {
-  // TODO: implement later
-}
-
 function authMetrics(buf) {
   Object.values(requests).forEach((record) => {
     if (record.path.startsWith("/auth")) {
@@ -135,13 +128,13 @@ function sendRawMetricsToGrafana(metricString) {
 }
 
 function sendMetricsPeriodically(period) {
-  const timer = setInterval(() => {
+  setInterval(() => {
     try {
       const buf = new MetricBuilder();
       httpMetrics(buf);
       systemMetrics(buf);
-      userMetrics(buf);
-      purchaseMetrics(buf);
+      //userMetrics(buf);
+      //purchaseMetrics(buf);
       authMetrics(buf);
 
       const metrics = buf.toString("\n");
@@ -159,36 +152,36 @@ function sendMetricsPeriodically(period) {
 //   });
 // }, 10000);
 
-function sendMetricToGrafana(metricName, metricValue, attributes) {
-  attributes = { ...attributes, source: config.source };
+// function sendMetricToGrafana(metricName, metricValue, attributes) {
+//   attributes = { ...attributes, source: config.source };
 
-  const metric = {
-    resourceMetrics: [
-      {
-        scopeMetrics: [
-          {
-            metrics: [
-              {
-                name: metricName,
-                unit: "1",
-                sum: {
-                  dataPoints: [
-                    {
-                      asInt: metricValue,
-                      timeUnixNano: Date.now() * 1000000,
-                      attributes: [],
-                    },
-                  ],
-                  aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-                  isMonotonic: true,
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  };
+//   const metric = {
+//     resourceMetrics: [
+//       {
+//         scopeMetrics: [
+//           {
+//             metrics: [
+//               {
+//                 name: metricName,
+//                 unit: "1",
+//                 sum: {
+//                   dataPoints: [
+//                     {
+//                       asInt: metricValue,
+//                       timeUnixNano: Date.now() * 1000000,
+//                       attributes: [],
+//                     },
+//                   ],
+//                   aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
+//                   isMonotonic: true,
+//                 },
+//               },
+//             ],
+//           },
+//         ],
+//       },
+//     ],
+//   };
 
   Object.keys(attributes).forEach((key) => {
     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
