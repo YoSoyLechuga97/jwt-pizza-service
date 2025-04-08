@@ -1,6 +1,6 @@
 const os = require("os");
 const config = require("./config");
-const { DB, Role } = require("./database/database.js");
+const DB = require("./database/database.js");
 
 const requests = {};
 
@@ -156,7 +156,6 @@ async function userMetrics(buf) {
   buf.add("users_logged_in", parseInt(activeUsers));
 }
 
-
 //TODO PURCHASEMETRICS (FIND OUT HOW MANY PURCHASES ARE MADE)
 
 function authMetrics(buf) {
@@ -200,7 +199,10 @@ function sendMetricsPeriodically(period) {
 
 function sendMetricsToGrafana(payload) {
   // Append `source` to each data point
-  const sourceTag = { key: "source", value: { stringValue: config.metrics.source } };
+  const sourceTag = {
+    key: "source",
+    value: { stringValue: config.metrics.source },
+  };
 
   payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
     metric.sum.dataPoints.forEach((dp) => {
