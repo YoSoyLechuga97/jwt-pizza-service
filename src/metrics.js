@@ -57,6 +57,14 @@ class MetricBuilder {
     return {
       resourceMetrics: [
         {
+          resource: {
+            attributes: [
+              {
+                key: "service.name",
+                value: { stringValue: config.source || "my-service" },
+              },
+            ],
+          },
           scopeMetrics: [
             {
               metrics: this.metrics,
@@ -222,15 +230,6 @@ function sendMetricsToGrafana(payload) {
 
   console.log("Here is the api key: ", config.metrics.apiKey);
   console.log("Here is the payload: ", JSON.stringify(payload, null, 2));
-
-  Object.keys(attributes).forEach((key) => {
-    metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-      {
-        key: key,
-        value: { stringValue: attributes[key] },
-      }
-    );
-  });
 
   fetch(`${config.metrics.url}`, {
     method: "POST",
