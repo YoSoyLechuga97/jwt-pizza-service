@@ -180,7 +180,6 @@ function systemMetrics(buf) {
   buf.add("system_memory_usage_percentage", memoryUsage);
 }
 
-//TODO USERMETRICS (FIND OUT HOW MANY USERS ARE LOGGED IN)
 async function userMetrics(buf) {
   const activeUsers = await DB.getActiveUsers();
   buf.add("users_logged_in", parseInt(activeUsers));
