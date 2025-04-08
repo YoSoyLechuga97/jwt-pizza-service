@@ -1,6 +1,6 @@
 const os = require("os");
 const config = require("./config");
-const DB = require("./database/database.js");
+const DB = require("./database/database.js").DB;
 
 const requests = {};
 
