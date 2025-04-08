@@ -42,7 +42,7 @@ class MetricBuilder {
       sum: {
         dataPoints: [
           {
-            asInt: value,
+            asDouble: value,
             timeUnixNano: Date.now() * 1e6,
             attributes,
           },
