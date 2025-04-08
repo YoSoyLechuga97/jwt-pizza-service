@@ -5,6 +5,12 @@ const { pizzaStats } = require("./routes/orderRouter.js");
 
 const requests = {};
 
+const pizzaStats = { success: 0, fail: 0 };
+
+function trackPizza(success) {
+  success ? pizzaStats.success++ : pizzaStats.fail++;
+}
+
 class MetricBuilder {
   constructor() {
     this.metricMap = new Map(); // key => metric
@@ -272,4 +278,9 @@ function sendMetricsToGrafana(payload) {
     });
 }
 
-module.exports = { requestTracker, sendMetricsPeriodically };
+module.exports = {
+  requestTracker,
+  sendMetricsPeriodically,
+  trackPizza,
+  pizzaStats,
+};
