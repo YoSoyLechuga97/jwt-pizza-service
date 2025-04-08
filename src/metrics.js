@@ -1,6 +1,7 @@
 const os = require("os");
 const config = require("./config");
 const DB = require("./database/database.js").DB;
+const orderRouter = require("./routes/orderRouter.js");
 
 const requests = {};
 
@@ -188,6 +189,8 @@ async function userMetrics(buf) {
 async function purchaseMetrics(buf) {
   const purchaseCount = await DB.getTotalRevenue();
   buf.add("purchases_total", parseFloat(purchaseCount.toFixed(8)));
+  buf.addGauge("pizza_purchases_per_minute", orderRouter.pizzaStats.success);
+  buf.addGauge("pizza_failures_per_minute", orderRouter.pizzaStats.fail);
 }
 
 function authMetrics(buf) {

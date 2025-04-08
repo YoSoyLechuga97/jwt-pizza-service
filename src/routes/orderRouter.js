@@ -5,6 +5,10 @@ const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 
 const orderRouter = express.Router();
+const pizzaStats = {
+  success: 0,
+  fail: 0,
+};
 
 orderRouter.endpoints = [
   {
@@ -87,8 +91,10 @@ orderRouter.post(
     const j = await r.json();
     if (r.ok) {
       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
+      pizzaStats.success++;
     } else {
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl });
+      pizzaStats.fail++;
     }
   })
 );
