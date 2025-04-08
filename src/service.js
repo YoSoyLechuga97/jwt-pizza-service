@@ -1,5 +1,6 @@
 const express = require("express");
 const metrics = require("./metrics.js");
+const logger = require("./logger.js");
 const { authRouter, setAuthUser } = require("./routes/authRouter.js");
 const orderRouter = require("./routes/orderRouter.js");
 const franchiseRouter = require("./routes/franchiseRouter.js");
@@ -10,6 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(setAuthUser);
 app.use(metrics.requestTracker);
+app.use(logger.httpLogger);
 metrics.sendMetricsPeriodically(10000); // Send metrics every 10 seconds
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -52,10 +54,17 @@ app.use("*", (req, res) => {
 
 // Default error handler for all exceptions and errors.
 app.use((err, req, res, next) => {
+  logger.log("error", "exception", {
+    path: req.originalUrl,
+    method: req.method,
+    message: err.message,
+    stack: err.stack,
+  });
+
   res
     .status(err.statusCode ?? 500)
-    .json({ message: err.message, stack: err.stack });
-  next();
+    .json({ message: "Internal Server Error" });
 });
+
 
 module.exports = app;

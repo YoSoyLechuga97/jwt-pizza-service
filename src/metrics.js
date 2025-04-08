@@ -255,8 +255,6 @@ function sendMetricsToGrafana(payload) {
     });
   });
 
-  console.log("Here is the payload: ", JSON.stringify(payload, null, 2));
-
   fetch(`${config.metrics.url}`, {
     method: "POST",
     headers: {

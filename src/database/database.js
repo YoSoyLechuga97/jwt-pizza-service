@@ -421,8 +421,24 @@ class DB {
   }
 
   async query(connection, sql, params) {
-    const [results] = await connection.execute(sql, params);
-    return results;
+    const logger = require("../logger.js");
+
+    try {
+      logger.log("info", "sql", {
+        query: sql,
+        params: params,
+      });
+
+      const [results] = await connection.execute(sql, params);
+      return results;
+    } catch (err) {
+      logger.log("error", "sql", {
+        query: sql,
+        params: params,
+        message: err.message,
+      });
+      throw err;
+    }
   }
 
   async getID(connection, key, value, table) {
