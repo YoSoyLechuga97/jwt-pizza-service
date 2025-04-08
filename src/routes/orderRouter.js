@@ -1,5 +1,6 @@
 const express = require("express");
 const config = require("../config.js");
+const logger = require("../logger.js");
 const { Role, DB } = require("../database/database.js");
 const { authRouter } = require("./authRouter.js");
 const { asyncHandler, StatusCodeError } = require("../endpointHelper.js");
@@ -120,6 +121,18 @@ orderRouter.post(
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
     const order = await DB.addDinerOrder(req.user, orderReq);
+
+    const factoryPayload = {
+      diner: { id: req.user.id, name: req.user.name, email: req.user.email },
+      order,
+    };
+
+    logger.log("info", "factory", {
+      service: "create-order",
+      url: `${config.factory.url}/api/order`,
+      request: factoryPayload,
+    });
+
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: "POST",
       headers: {
@@ -132,6 +145,14 @@ orderRouter.post(
       }),
     });
     const j = await r.json();
+
+    logger.log("info", "factory", {
+      service: "create-order",
+      url: `${config.factory.url}/api/order`,
+      statusCode: r.status,
+      response: j,
+    });
+
     if (r.ok) {
       trackPizza(true);
       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
