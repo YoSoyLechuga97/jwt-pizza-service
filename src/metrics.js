@@ -106,26 +106,26 @@ function authMetrics(buf) {
   });
 }
 
-function sendRawMetricsToGrafana(metricString) {
-  fetch(`${config.url}`, {
-    method: "POST",
-    body: metricString,
-    headers: {
-      Authorization: `Bearer ${config.apiKey}`,
-      "Content-Type": "text/plain",
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        console.error("Failed to push metrics to Grafana");
-      } else {
-        console.log("✅ Pushed metrics to Grafana");
-      }
-    })
-    .catch((err) => {
-      console.error("Error sending metrics:", err);
-    });
-}
+// function sendRawMetricsToGrafana(metricString) {
+//   fetch(`${config.url}`, {
+//     method: "POST",
+//     body: metricString,
+//     headers: {
+//       Authorization: `Bearer ${config.apiKey}`,
+//       "Content-Type": "text/plain",
+//     },
+//   })
+//     .then((response) => {
+//       if (!response.ok) {
+//         console.error("Failed to push metrics to Grafana");
+//       } else {
+//         console.log("✅ Pushed metrics to Grafana");
+//       }
+//     })
+//     .catch((err) => {
+//       console.error("Error sending metrics:", err);
+//     });
+// }
 
 function sendMetricsPeriodically(period) {
   setInterval(() => {
@@ -138,7 +138,7 @@ function sendMetricsPeriodically(period) {
       authMetrics(buf);
 
       const metrics = buf.toString("\n");
-      sendRawMetricsToGrafana(metrics);
+      this.sendMetricToGrafana(metrics);
     } catch (error) {
       console.log("Error sending metrics", error);
     }
@@ -152,64 +152,64 @@ function sendMetricsPeriodically(period) {
 //   });
 // }, 10000);
 
-// function sendMetricToGrafana(metricName, metricValue, attributes) {
-//   attributes = { ...attributes, source: config.source };
+function sendMetricToGrafana(metricName, metricValue, attributes) {
+  attributes = { ...attributes, source: config.source };
 
-//   const metric = {
-//     resourceMetrics: [
-//       {
-//         scopeMetrics: [
-//           {
-//             metrics: [
-//               {
-//                 name: metricName,
-//                 unit: "1",
-//                 sum: {
-//                   dataPoints: [
-//                     {
-//                       asInt: metricValue,
-//                       timeUnixNano: Date.now() * 1000000,
-//                       attributes: [],
-//                     },
-//                   ],
-//                   aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-//                   isMonotonic: true,
-//                 },
-//               },
-//             ],
-//           },
-//         ],
-//       },
-//     ],
-//   };
+  const metric = {
+    resourceMetrics: [
+      {
+        scopeMetrics: [
+          {
+            metrics: [
+              {
+                name: metricName,
+                unit: "1",
+                sum: {
+                  dataPoints: [
+                    {
+                      asInt: metricValue,
+                      timeUnixNano: Date.now() * 1000000,
+                      attributes: [],
+                    },
+                  ],
+                  aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
+                  isMonotonic: true,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
 
-//   Object.keys(attributes).forEach((key) => {
-//     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-//       {
-//         key: key,
-//         value: { stringValue: attributes[key] },
-//       }
-//     );
-//   });
+  Object.keys(attributes).forEach((key) => {
+    metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+      {
+        key: key,
+        value: { stringValue: attributes[key] },
+      }
+    );
+  });
 
-//   fetch(`${config.url}`, {
-//     method: "POST",
-//     body: JSON.stringify(metric),
-//     headers: {
-//       Authorization: `Bearer ${config.apiKey}`,
-//       "Content-Type": "application/json",
-//     },
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         console.error("Failed to push metrics data to Grafana");
-//       } else {
-//         console.log(`Pushed ${metricName}`);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Error pushing metrics:", error);
-//     });
-// }
+  fetch(`${config.url}`, {
+    method: "POST",
+    body: JSON.stringify(metric),
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        console.error("Failed to push metrics data to Grafana");
+      } else {
+        console.log(`Pushed ${metricName}`);
+      }
+    })
+    .catch((error) => {
+      console.error("Error pushing metrics:", error);
+    });
+}
 
 module.exports = { requestTracker, sendMetricsPeriodically };
