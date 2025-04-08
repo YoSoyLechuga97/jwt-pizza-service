@@ -238,8 +238,7 @@ function sendMetricsToGrafana(payload) {
       dp.attributes.push(sourceTag);
     });
   });
-
-  console.log("Here is the api key: ", config.metrics.apiKey);
+  
   console.log("Here is the payload: ", JSON.stringify(payload, null, 2));
 
   fetch(`${config.metrics.url}`, {
