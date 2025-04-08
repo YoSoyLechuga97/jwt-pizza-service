@@ -177,6 +177,19 @@ class DB {
     }
   }
 
+  async getTotalRevenue() {
+    const connection = await this.getConnection();
+    try {
+      const result = await this.query(
+        connection,
+        `SELECT SUM(price) AS total FROM orderItem`
+      );
+      return result[0].total || 0;
+    } finally {
+      connection.end();
+    }
+  }
+
   async logoutUser(token) {
     token = this.getTokenSignature(token);
     const connection = await this.getConnection();

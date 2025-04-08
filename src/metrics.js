@@ -141,29 +141,6 @@ function getMemoryUsagePercentage() {
   return memoryUsage.toFixed(2);
 }
 
-// function httpMetrics(buf) {
-//   Object.values(requests).forEach((record) => {
-//     const { method, path, count } = record;
-
-//     // Only track endpoint details for these:
-//     const isAuth = path.startsWith("/auth");
-//     const isOrder = path.includes("order") || path.includes("pizza");
-
-//     if (isAuth || isOrder) {
-//       buf.add("http_requests_total", count, {
-//         method,
-//         endpoint: isAuth ? "/auth" : "/order",
-//       });
-//     } else {
-//       // Everything else gets grouped by method only
-//       buf.add("http_requests_total", count, {
-//         method,
-//         endpoint: "general",
-//       });
-//     }
-//   });
-// }
-
 function httpMetrics(buf) {
   Object.values(requests).forEach((record) => {
     const { method, path, count, durations } = record;
@@ -208,6 +185,11 @@ async function userMetrics(buf) {
 }
 
 //TODO PURCHASEMETRICS (FIND OUT HOW MANY PURCHASES ARE MADE)
+async function purchaseMetrics(buf) {
+  const purchaseCount = await DB.getTotalRevenue();
+  buf.add("purchases_total", parseInt(purchaseCount));
+}
+
 
 function authMetrics(buf) {
   Object.values(requests).forEach((record) => {
@@ -231,7 +213,7 @@ function sendMetricsPeriodically(period) {
       systemMetrics(buf);
       authMetrics(buf);
       await userMetrics(buf);
-      // purchaseMetrics(buf);
+      await purchaseMetrics(buf);
 
       const metricPayload = buf.toOTLP();
       if (
@@ -258,12 +240,6 @@ function sendMetricsToGrafana(payload) {
     key: "source",
     value: { stringValue: config.metrics.source },
   };
-
-  // payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
-  //   metric.sum.dataPoints.forEach((dp) => {
-  //     dp.attributes.push(sourceTag);
-  //   });
-  // });
 
   payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
     const dataPoints = metric.sum?.dataPoints || metric.gauge?.dataPoints || [];
