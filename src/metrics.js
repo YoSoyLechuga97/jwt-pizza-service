@@ -220,6 +220,10 @@ function sendMetricsToGrafana(payload) {
     });
   });
 
+  console.log("Here is the api key: ", config.metrics.apiKey);
+  console.log("Here is the payload: ", JSON.stringify(payload, null, 2));
+  console.log("Here is the url: ", config.metrics.url);
+
   fetch(`${config.metrics.url}`, {
     method: "POST",
     headers: {
