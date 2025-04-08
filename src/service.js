@@ -61,10 +61,9 @@ app.use((err, req, res, next) => {
     stack: err.stack,
   });
 
-  res
-    .status(err.statusCode ?? 500)
-    .json({ message: "Internal Server Error" });
-});
+  res.status(err.statusCode ?? 500).json({ message: "Internal Server Error" });
 
+  next();
+});
 
 module.exports = app;
