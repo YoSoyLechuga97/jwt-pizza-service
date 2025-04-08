@@ -224,6 +224,7 @@ function sendMetricsPeriodically(period) {
   }
 
   collectAndSendMetrics(); // Start the first collection
+  DB.clearAllTokens(); // Clear expired tokens
 }
 
 function sendMetricsToGrafana(payload) {
@@ -238,7 +239,7 @@ function sendMetricsToGrafana(payload) {
       dp.attributes.push(sourceTag);
     });
   });
-  
+
   console.log("Here is the payload: ", JSON.stringify(payload, null, 2));
 
   fetch(`${config.metrics.url}`, {

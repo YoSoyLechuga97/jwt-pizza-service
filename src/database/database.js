@@ -19,6 +19,16 @@ class DB {
     }
   }
 
+  async clearAllTokens() {
+    const connection = await this.getConnection();
+    try {
+      await this.query(connection, `DELETE FROM auth`);
+      console.log("✅ All tokens cleared from auth table.");
+    } finally {
+      connection.end();
+    }
+  }
+
   async addMenuItem(item) {
     const connection = await this.getConnection();
     try {
