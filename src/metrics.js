@@ -52,7 +52,7 @@ class MetricBuilder {
     }
   }
 
-  addGauge(name, value, tags = {}) {
+  addGauge(name, value, tags = {}, unit = "1") {
     const key = this._buildKey(name, tags);
     const attributes = Object.entries(tags).map(([key, val]) => ({
       key,
@@ -61,7 +61,7 @@ class MetricBuilder {
 
     this.metricMap.set(key, {
       name,
-      unit: "ms",
+      unit,
       gauge: {
         dataPoints: [
           {
