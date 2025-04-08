@@ -165,6 +165,9 @@ function httpMetrics(buf) {
         method,
         endpoint,
       });
+    } else {
+      // No durations recorded, so we can skip this metric
+      console.warn(`No durations recorded for ${method} ${path}`);
     }
   });
 }
