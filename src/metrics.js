@@ -224,7 +224,6 @@ function sendMetricsPeriodically(period) {
   }
 
   collectAndSendMetrics(); // Start the first collection
-  DB.clearAllTokens(); // Clear expired tokens
 }
 
 function sendMetricsToGrafana(payload) {
