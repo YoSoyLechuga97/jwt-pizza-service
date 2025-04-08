@@ -187,9 +187,8 @@ async function userMetrics(buf) {
 //TODO PURCHASEMETRICS (FIND OUT HOW MANY PURCHASES ARE MADE)
 async function purchaseMetrics(buf) {
   const purchaseCount = await DB.getTotalRevenue();
-  buf.add("purchases_total", parseInt(purchaseCount));
+  buf.add("purchases_total", parseFloat(purchaseCount.toFixed(8)));
 }
-
 
 function authMetrics(buf) {
   Object.values(requests).forEach((record) => {
