@@ -224,8 +224,8 @@ function sendMetricsPeriodically(period) {
 
       const metricPayload = buf.toOTLP();
       if (
-        !payload.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics ||
-        payload.resourceMetrics[0].scopeMetrics[0].metrics.length === 0
+        !metricPayload.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics ||
+        metricPayload.resourceMetrics[0].scopeMetrics[0].metrics.length === 0
       ) {
         console.log("No metrics to send this round.");
         return; // ⛔ Don’t send empty payloads
