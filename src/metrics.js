@@ -183,47 +183,33 @@ function sendMetricsPeriodically(period) {
 //     ],
 //   };
 
-// Object.keys(attributes).forEach((key) => {
-//   metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-//     {
-//       key: key,
-//       value: { stringValue: attributes[key] },
-//     }
-//   );
-// });
+//   Object.keys(attributes).forEach((key) => {
+//     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+//       {
+//         key: key,
+//         value: { stringValue: attributes[key] },
+//       }
+//     );
+//   });
 
-const dataPoint =
-  metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0];
-
-// SAFETY CHECK: Initialize `attributes` if it doesn't exist
-if (!dataPoint.attributes) {
-  dataPoint.attributes = [];
-}
-
-Object.keys(attributes).forEach((key) => {
-  dataPoint.attributes.push({
-    key: key,
-    value: { stringValue: attributes[key] },
-  });
-});
-
-fetch(`${config.url}`, {
-  method: "POST",
-  body: JSON.stringify(metric),
-  headers: {
-    Authorization: `Bearer ${config.apiKey}`,
-    "Content-Type": "application/json",
-  },
-})
-  .then((response) => {
-    if (!response.ok) {
-      console.error("Failed to push metrics data to Grafana");
-    } else {
-      console.log(`Pushed ${metricName}`);
-    }
-  })
-  .catch((error) => {
-    console.error("Error pushing metrics:", error);
-  });
+//   fetch(`${config.url}`, {
+//     method: "POST",
+//     body: JSON.stringify(metric),
+//     headers: {
+//       Authorization: `Bearer ${config.apiKey}`,
+//       "Content-Type": "application/json",
+//     },
+//   })
+//     .then((response) => {
+//       if (!response.ok) {
+//         console.error("Failed to push metrics data to Grafana");
+//       } else {
+//         console.log(`Pushed ${metricName}`);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Error pushing metrics:", error);
+//     });
+// }
 
 module.exports = { requestTracker, sendMetricsPeriodically };
