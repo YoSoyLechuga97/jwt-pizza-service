@@ -220,6 +220,7 @@ function sendMetricsToGrafana(payload) {
     });
   });
 
+  console.log("Here's the url I am using: ", config.metrics.url);
   fetch(`${config.metrics.url}`, {
     method: "POST",
     headers: {
