@@ -53,7 +53,7 @@ class MetricBuilder {
     });
 
     Object.keys(attributes).forEach((key) => {
-      metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+      this.metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
         {
           key: key,
           value: { stringValue: attributes[key] },
