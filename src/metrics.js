@@ -1,66 +1,8 @@
 const os = require("os");
 const config = require("./config");
+const { DB, Role } = require("./database/database.js");
 
 const requests = {};
-
-// class MetricBuilder {
-//   constructor() {
-//     this.metrics = [];
-//   }
-
-//   add(name, value, tags = {}) {
-//     const attributes = Object.entries(tags).map(([key, val]) => ({
-//       key,
-//       value: { stringValue: val },
-//     }));
-
-//     this.metrics.push({
-//       name,
-//       unit: "1",
-//       sum: {
-//         dataPoints: [
-//           {
-//             asInt: value,
-//             timeUnixNano: Date.now() * 1000000,
-//             attributes: [],
-//           },
-//         ],
-//         aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-//         isMonotonic: true,
-//       },
-//     });
-
-//     Object.keys(attributes).forEach((key) => {
-//       this.metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-//         {
-//           key: key,
-//           value: { stringValue: attributes[key] },
-//         }
-//       );
-//     });
-//   }
-
-//   toOTLP() {
-//     return {
-//       resourceMetrics: [
-//         {
-//           resource: {
-//             attributes: this.attributes,
-//           },
-//           scopeMetrics: [
-//             {
-//               metrics: this.metrics,
-//             },
-//           ],
-//         },
-//       ],
-//     };
-//   }
-
-//   clear() {
-//     this.metrics = [];
-//   }
-// }
 
 class MetricBuilder {
   constructor() {
@@ -177,15 +119,6 @@ function getMemoryUsagePercentage() {
   return memoryUsage.toFixed(2);
 }
 
-// function httpMetrics(buf) {
-//   Object.values(requests).forEach((record) => {
-//     buf.add("http_requests_total", record.count, {
-//       method: record.method,
-//       endpoint: record.path,
-//     });
-//   });
-// }
-
 function httpMetrics(buf) {
   Object.values(requests).forEach((record) => {
     const { method, path, count } = record;
@@ -218,6 +151,11 @@ function systemMetrics(buf) {
 }
 
 //TODO USERMETRICS (FIND OUT HOW MANY USERS ARE LOGGED IN)
+async function userMetrics(buf) {
+  const activeUsers = await DB.getActiveUserCount();
+  buf.add("users_logged_in", parseInt(activeUsers));
+}
+
 
 //TODO PURCHASEMETRICS (FIND OUT HOW MANY PURCHASES ARE MADE)
 
@@ -242,7 +180,7 @@ function sendMetricsPeriodically(period) {
       httpMetrics(buf);
       systemMetrics(buf);
       authMetrics(buf);
-      // userMetrics(buf);
+      userMetrics(buf);
       // purchaseMetrics(buf);
 
       const metricPayload = buf.toOTLP();
