@@ -192,7 +192,7 @@ async function purchaseMetrics(buf) {
 
 function authMetrics(buf) {
   Object.values(requests).forEach((record) => {
-    if (record.path.includes("/auth")) {
+    if (record.path.startsWith("/auth")) {
       const success = record.statuses[200] || 0;
       const fail = Object.entries(record.statuses)
         .filter(([code]) => code !== "200")
