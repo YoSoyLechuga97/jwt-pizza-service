@@ -135,18 +135,13 @@ orderRouter.post(
       res.send({ order, reportSlowPizzaToFactoryUrl: j.reportUrl, jwt: j.jwt });
       pizzaStats.success++;
     } else {
-      res
-        .status(500)
-        .send({
-          message: "Failed to fulfill order at factory",
-          reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl,
-        });
+      res.status(500).send({
+        message: "Failed to fulfill order at factory",
+        reportPizzaCreationErrorToPizzaFactoryUrl: j.reportUrl,
+      });
       pizzaStats.fail++;
     }
   })
 );
 
-module.exports = {
-  orderRouter,
-  pizzaStats,
-};
+module.exports = { orderRouter, pizzaStats };
