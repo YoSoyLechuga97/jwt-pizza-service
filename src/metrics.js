@@ -9,15 +9,52 @@ const requests = {};
 //   }
 
 //   add(name, value, tags = {}) {
-//     const tagString = Object.entries(tags)
-//       .map(([k, v]) => `${k}="${v}"`)
-//       .join(",");
+//     const attributes = Object.entries(tags).map(([key, val]) => ({
+//       key,
+//       value: { stringValue: val },
+//     }));
 
-//     this.metrics.push(`${name}{${tagString}} ${value}`);
+//     this.metrics.push({
+//       name,
+//       unit: "1",
+//       sum: {
+//         dataPoints: [
+//           {
+//             asInt: value,
+//             timeUnixNano: Date.now() * 1000000,
+//             attributes: [],
+//           },
+//         ],
+//         aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
+//         isMonotonic: true,
+//       },
+//     });
+
+//     Object.keys(attributes).forEach((key) => {
+//       this.metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+//         {
+//           key: key,
+//           value: { stringValue: attributes[key] },
+//         }
+//       );
+//     });
 //   }
 
-//   toString(separator = "\n") {
-//     return this.metrics.join(separator);
+//   toOTLP() {
+//     return {
+//       resourceMetrics: [
+//         {
+//           resource: {
+//             attributes: this.attributes,
+//           },
+//           scopeMetrics: [
+//             {
+//               metrics: this.metrics,
+//             },
+//           ],
+//         },
+//       ],
+//     };
 //   }
 
 //   clear() {
@@ -27,39 +64,44 @@ const requests = {};
 
 class MetricBuilder {
   constructor() {
-    this.metrics = [];
+    this.metricMap = new Map(); // key => metric
+  }
+
+  _buildKey(name, tags) {
+    return `${name}|${Object.entries(tags)
+      .sort()
+      .map(([k, v]) => `${k}=${v}`)
+      .join(",")}`;
   }
 
   add(name, value, tags = {}) {
+    const key = this._buildKey(name, tags);
     const attributes = Object.entries(tags).map(([key, val]) => ({
       key,
       value: { stringValue: val },
     }));
 
-    this.metrics.push({
-      name,
-      unit: "1",
-      sum: {
-        dataPoints: [
-          {
-            asInt: value,
-            timeUnixNano: Date.now() * 1000000,
-            attributes: [],
-          },
-        ],
-        aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-        isMonotonic: true,
-      },
-    });
-
-    Object.keys(attributes).forEach((key) => {
-      this.metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-        {
-          key: key,
-          value: { stringValue: attributes[key] },
-        }
-      );
-    });
+    if (this.metricMap.has(key)) {
+      // Increment the existing value
+      this.metricMap.get(key).sum.dataPoints[0].asDouble += value;
+    } else {
+      // Create a new metric entry
+      this.metricMap.set(key, {
+        name,
+        unit: "1",
+        sum: {
+          dataPoints: [
+            {
+              asDouble: value,
+              timeUnixNano: Date.now() * 1e6,
+              attributes,
+            },
+          ],
+          aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
+          isMonotonic: true,
+        },
+      });
+    }
   }
 
   toOTLP() {
@@ -67,11 +109,16 @@ class MetricBuilder {
       resourceMetrics: [
         {
           resource: {
-            attributes: this.attributes,
+            attributes: [
+              {
+                key: "service.name",
+                value: { stringValue: config.source || "my-service" },
+              },
+            ],
           },
           scopeMetrics: [
             {
-              metrics: this.metrics,
+              metrics: Array.from(this.metricMap.values()),
             },
           ],
         },
@@ -80,7 +127,7 @@ class MetricBuilder {
   }
 
   clear() {
-    this.metrics = [];
+    this.metricMap.clear();
   }
 }
 
@@ -215,65 +262,5 @@ function sendMetricsToGrafana(payload) {
       console.error("Error pushing metrics:", err);
     });
 }
-
-// function sendMetricToGrafana(metricName, metricValue, attributes) {
-//   attributes = { ...attributes, source: config.source };
-
-//   const metric = {
-//     resourceMetrics: [
-//       {
-//         scopeMetrics: [
-//           {
-//             metrics: [
-//               {
-//                 name: metricName,
-//                 unit: "1",
-//                 sum: {
-//                   dataPoints: [
-//                     {
-//                       asInt: metricValue,
-//                       timeUnixNano: Date.now() * 1000000,
-//                       attributes: [],
-//                     },
-//                   ],
-//                   aggregationTemporality: "AGGREGATION_TEMPORALITY_CUMULATIVE",
-//                   isMonotonic: true,
-//                 },
-//               },
-//             ],
-//           },
-//         ],
-//       },
-//     ],
-//   };
-
-//   Object.keys(attributes).forEach((key) => {
-//     metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-//       {
-//         key: key,
-//         value: { stringValue: attributes[key] },
-//       }
-//     );
-//   });
-
-//   fetch(`${config.url}`, {
-//     method: "POST",
-//     body: JSON.stringify(metric),
-//     headers: {
-//       Authorization: `Bearer ${config.apiKey}`,
-//       "Content-Type": "application/json",
-//     },
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         console.error("Failed to push metrics data to Grafana");
-//       } else {
-//         console.log(`Pushed ${metricName}`);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Error pushing metrics:", error);
-//     });
-// }
 
 module.exports = { requestTracker, sendMetricsPeriodically };
