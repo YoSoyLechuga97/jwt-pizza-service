@@ -138,7 +138,7 @@ function sendMetricsPeriodically(period) {
       authMetrics(buf);
 
       const metrics = buf.toString("\n");
-      this.sendMetricToGrafana(metrics);
+      sendMetricToGrafana(metrics);
     } catch (error) {
       console.log("Error sending metrics", error);
     }
