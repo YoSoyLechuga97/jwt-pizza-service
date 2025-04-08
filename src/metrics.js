@@ -183,13 +183,28 @@ function sendMetricsPeriodically(period) {
 //     ],
 //   };
 
+// Object.keys(attributes).forEach((key) => {
+//   metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
+//     {
+//       key: key,
+//       value: { stringValue: attributes[key] },
+//     }
+//   );
+// });
+
+const dataPoint =
+  metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0];
+
+// SAFETY CHECK: Initialize `attributes` if it doesn't exist
+if (!dataPoint.attributes) {
+  dataPoint.attributes = [];
+}
+
 Object.keys(attributes).forEach((key) => {
-  metric.resourceMetrics[0].scopeMetrics[0].metrics[0].sum.dataPoints[0].attributes.push(
-    {
-      key: key,
-      value: { stringValue: attributes[key] },
-    }
-  );
+  dataPoint.attributes.push({
+    key: key,
+    value: { stringValue: attributes[key] },
+  });
 });
 
 fetch(`${config.url}`, {
