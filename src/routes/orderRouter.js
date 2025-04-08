@@ -99,4 +99,7 @@ orderRouter.post(
   })
 );
 
-module.exports = orderRouter;
+module.exports = {
+  router: orderRouter,
+  pizzaStats,
+};
