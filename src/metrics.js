@@ -46,6 +46,28 @@ class MetricBuilder {
     }
   }
 
+  addGauge(name, value, tags = {}) {
+    const key = this._buildKey(name, tags);
+    const attributes = Object.entries(tags).map(([key, val]) => ({
+      key,
+      value: { stringValue: val },
+    }));
+
+    this.metricMap.set(key, {
+      name,
+      unit: "ms",
+      gauge: {
+        dataPoints: [
+          {
+            asDouble: value,
+            timeUnixNano: Date.now() * 1e6,
+            attributes,
+          },
+        ],
+      },
+    });
+  }
+
   toOTLP() {
     return {
       resourceMetrics: [
@@ -156,19 +178,13 @@ function httpMetrics(buf) {
       endpoint,
     });
 
-    if (durations.length > 0) {
-      const total = durations.reduce((sum, d) => sum + d, 0);
-      const avg = total / durations.length;
+    const totalDuration = record.durations.reduce((sum, d) => sum + d, 0);
+    const avgDuration = totalDuration / record.durations.length || 0;
 
-      // Avg latency
-      buf.add("http_latency_ms_avg", avg, {
-        method,
-        endpoint,
-      });
-    } else {
-      // No durations recorded, so we can skip this metric
-      console.warn(`No durations recorded for ${method} ${path}`);
-    }
+    buf.addGauge("http_latency_ms_avg", avgDuration, {
+      method,
+      endpoint: isAuth ? "/auth" : isOrder ? "/order" : "general",
+    });
   });
 }
 
