@@ -223,6 +223,13 @@ function sendMetricsPeriodically(period) {
       // purchaseMetrics(buf);
 
       const metricPayload = buf.toOTLP();
+      if (
+        !payload.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics ||
+        payload.resourceMetrics[0].scopeMetrics[0].metrics.length === 0
+      ) {
+        console.log("No metrics to send this round.");
+        return; // ⛔ Don’t send empty payloads
+      }
       sendMetricsToGrafana(metricPayload);
     } catch (error) {
       console.error("Error collecting metrics", error);
