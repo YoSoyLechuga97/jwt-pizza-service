@@ -1,7 +1,6 @@
 const os = require("os");
 const config = require("./config");
 const DB = require("./database/database.js").DB;
-const { pizzaStats } = require("./routes/orderRouter.js");
 
 const requests = {};
 
