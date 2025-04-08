@@ -221,10 +221,11 @@ function sendMetricsToGrafana(payload) {
   });
 
   console.log("Here's the url I am using so please work: ", config.metrics.url);
+
   fetch(`${config.metrics.url}`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${config.metrics.apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
