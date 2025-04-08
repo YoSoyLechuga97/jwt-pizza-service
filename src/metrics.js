@@ -119,24 +119,52 @@ function getMemoryUsagePercentage() {
   return memoryUsage.toFixed(2);
 }
 
+// function httpMetrics(buf) {
+//   Object.values(requests).forEach((record) => {
+//     const { method, path, count } = record;
+
+//     // Only track endpoint details for these:
+//     const isAuth = path.startsWith("/auth");
+//     const isOrder = path.includes("order") || path.includes("pizza");
+
+//     if (isAuth || isOrder) {
+//       buf.add("http_requests_total", count, {
+//         method,
+//         endpoint: isAuth ? "/auth" : "/order",
+//       });
+//     } else {
+//       // Everything else gets grouped by method only
+//       buf.add("http_requests_total", count, {
+//         method,
+//         endpoint: "general",
+//       });
+//     }
+//   });
+// }
+
 function httpMetrics(buf) {
   Object.values(requests).forEach((record) => {
-    const { method, path, count } = record;
+    const { method, path, count, durations } = record;
 
-    // Only track endpoint details for these:
     const isAuth = path.startsWith("/auth");
     const isOrder = path.includes("order") || path.includes("pizza");
+    const endpoint = isAuth ? "/auth" : isOrder ? "/order" : "general";
 
-    if (isAuth || isOrder) {
-      buf.add("http_requests_total", count, {
+    // Total requests
+    buf.add("http_requests_total", count, {
+      method,
+      endpoint,
+    });
+
+    if (durations.length > 0) {
+      const total = durations.reduce((sum, d) => sum + d, 0);
+      const avg = total / durations.length;
+      const max = Math.max(...durations);
+
+      // Avg latency
+      buf.add("http_latency_ms_avg", avg, {
         method,
-        endpoint: isAuth ? "/auth" : "/order",
-      });
-    } else {
-      // Everything else gets grouped by method only
-      buf.add("http_requests_total", count, {
-        method,
-        endpoint: "general",
+        endpoint,
       });
     }
   });
@@ -171,31 +199,6 @@ function authMetrics(buf) {
     }
   });
 }
-
-// function sendMetricsPeriodically(period) {
-//   setInterval(() => {
-//     try {
-//       const buf = new MetricBuilder();
-//       httpMetrics(buf);
-//       systemMetrics(buf);
-//       authMetrics(buf);
-//       userMetrics(buf);
-//       // purchaseMetrics(buf);
-
-//       const metricPayload = buf.toOTLP();
-//       if (
-//         !metricPayload.resourceMetrics?.[0]?.scopeMetrics?.[0]?.metrics ||
-//         metricPayload.resourceMetrics[0].scopeMetrics[0].metrics.length === 0
-//       ) {
-//         console.log("No metrics to send this round.");
-//         return; // ⛔ Don’t send empty payloads
-//       }
-//       sendMetricsToGrafana(metricPayload);
-//     } catch (error) {
-//       console.error("Error collecting metrics", error);
-//     }
-//   }, period);
-// }
 
 function sendMetricsPeriodically(period) {
   async function collectAndSendMetrics() {
