@@ -112,7 +112,7 @@ class MetricBuilder {
             attributes: [
               {
                 key: "service.name",
-                value: { stringValue: config.source || "my-service" },
+                value: { stringValue: config.metrics.source || "my-service" },
               },
             ],
           },
@@ -262,7 +262,7 @@ function sendMetricsPeriodically(period) {
 
 function sendMetricsToGrafana(payload) {
   // Append `source` to each data point
-  const sourceTag = { key: "source", value: { stringValue: config.source } };
+  const sourceTag = { key: "source", value: { stringValue: config.metrics.source } };
 
   payload.resourceMetrics[0].scopeMetrics[0].metrics.forEach((metric) => {
     metric.sum.dataPoints.forEach((dp) => {
